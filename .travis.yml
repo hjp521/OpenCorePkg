@@ -2,7 +2,9 @@ language: cpp
 env:
   global:
   - FORCE_INSTALL=1
-  - secure: oRRn6xhk7BdJB6o/l6JzD5jvwUIVkT8hMgvpy3WfkdfaqvpBEX2TWplJUQR5Lr8GzWK9+sYFA48PWQISPCIqxvs9R9etjhfzPYYp/YVOcxOmHNr8TFuN763cx/Dnq71ehJQhTlOe4g6ldodn6lQoH5D4q57bn/fkMO4GLS7LEbtXxVmUT/YvqX+gYlz2DNRIc4NxKUPyQpkckSpZfSBhQqLvav8ESIT8Z4v//G6+JSV5zaA7ITVUQYYmx/PCqgLqrn4h3TvHK+7sNEQYeS/c9NNfiZrLVbpW4hoPsfCQsRhzdouw7pO6gWL/kofkvelcVjAnViZ6Ox0++Rm0qQGeIBSdIiSNP2vjMPf0Cuc+WzGh1NnL1reCZMvhLE/lax/7FwCJK95/1f0r6UfXtb/oPJJxAYC0hXZASQNN2BItasHR6esp/bzP/QTzMfGU+6N5x3WU9udbfUVsqcShJizI3oXzIR/Q4Fqa3rmqd9Aj955FTofJtVhdyYsOs5c/9TR+vrzRX1RSSXBzCHZ7N4ZxYeq0tSglXzqngfy8+LjEntsCixNLbpG36gMo63AAQmBU46J8O/QU3q4ElgNjD2st+J6ft7aIqtplAQFjGhIV+odR3gEGiVAE257cqrHmZgyQjFm3786SNnJTiv8cSpAbduayPno2t3PlnAJqARobup8=
+  - HAS_OPENSSL_BUILD=1
+  - HAS_OPENSSL_W32BUILD=0
+  - WERROR=1 
 
 matrix:
   include:
@@ -89,43 +91,3 @@ matrix:
     - "./build_duet.tool"
     - "./build_oc.tool"
 
-  - os: osx
-    name: "Analyze Scripts"
-    osx_image: xcode11.6
-
-    script:
-    - HOMEBREW_NO_INSTALL_CLEANUP=1 brew install shellcheck
-    - find . \( -name "*.tool" -o -name "*.command" -o -name "*.sh" \) -exec sh -c 'for TargetFile; do shellcheck --severity=info "${TargetFile}" || exit 1; done' sh {} +
-    - pip2 install pyyaml
-    - cd AppleModels || exit 1
-    - python2 ./update_generated.py  || exit 1
-    - if [ "$(git status --porcelain)" != "" ]; then echo "DataBase desync"; exit 1 ; fi
-    - cd - || exit 1
-    - plutil -lint Docs/Sample.plist || exit 1
-    - plutil -lint Docs/SampleCustom.plist || exit 1
-
-  - os: osx
-    name: "Analyze Coverity"
-    osx_image: xcode11.6
-    compiler: clang
-
-    before_install:
-      - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl
-      - curl -Ls https://entrust.com/root-certificates/entrust_l1k.cer -o ~/entrust_l1k.crt || exit 1
-      - curl -LS https://curl.haxx.se/ca/cacert.pem -o ~/cacert.pem || exit 1
-      - cat ~/entrust_l1k.crt >> ~/cacert.pem || exit 1
-      - echo "cacert=\"$HOME/cacert.pem\"" > ~/.curlrc || exit 1
-      - echo "ca_certificate=$HOME/cacert.pem" > ~/.wgetrc || exit 1
-
-    script:
-      - echo "This script runs coverity..."
-
-    addons:
-      coverity_scan:
-        project:
-          name: "hjp521/OpenCorePkg"
-          description: "OpenCorePkg"
-        notification_email: $NOTIFICATION_EMAIL
-        build_command_prepend: "./build_oc.tool --skip-build --skip-package && cd UDK ; src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/Lilu/master/Lilu/Scripts/covstrap.sh) && eval \"$src\" || exit 1"
-        build_command: "../build_oc.tool --skip-tests --skip-package RELEASE"
-        branch_pattern: master
