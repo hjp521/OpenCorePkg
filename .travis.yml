@@ -2,7 +2,10 @@ language: cpp
 env:
   global:
   - FORCE_INSTALL=1
-
+  - HAS_OPENSSL_BUILD=1
+  - HAS_OPENSSL_W32BUILD=0
+  - WERROR=1
+  
 matrix:
   include:
 
@@ -15,13 +18,64 @@ matrix:
     - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl mingw-w64
     - "./build_duet.tool"
     - "./build_oc.tool"
-    
+
     deploy:
       provider: releases
-      user: "hjp521"
-      password: "Hjp581200"
       skip_cleanup: true
-      file:"Binaries/*.zip"
+      file:
+      - Binaries/*.zip
       file_glob: true
       on:
         tags: true
+      api_key:
+        secure: CRCTmf0iRZTtZW3+G/S0fcvwiXgJJQbnmit7Q5FsUIGKaTGvwzRJa6jszt31gpeJB0RttaRwxMztX9zgYZweeqVmfUN3S0ZDCxj5wwCCzsGX+ZLvbYUHVwad3i+L27Cc9TsHPwUb1cUoMZFWljukDJSezjf39ViS6bzo/dM0o9B9NMoGY+3ytSpdt/3AUByMZ70mBueKbUVZzpduG4ggkNT1zeHMTkS98moj3YdpSTdhOpJy7pd/NKIHw05kMWDPvovDPPaTT1NSaPuRkKstP8lZL2KI1o4Lz93atmv/HsgELvV8WYGexSOxNQIs8fAYPiIOMIYdDJNJOQNJS0GRTpxtPWj/UZhXPbuHEFq9H8EycXueKaDq4bGtLDhXNz0qQ9iVif3ZOcd9oGlKQ3C6VaTwlnSuAR235Ilw+y9u01XTok0aHTcaEPJi+aa1FlrehJPNIpI42MkwqPrOJQSHaE+R2/+481jEN9AiWlk+2G11cKQ1yewOBSv8T/PJ5KwjIUZ0VWfh7v4G6fwAy7ilagtbUGrxaaUkMJdkQzo+IQlH9jt6EMrDjjcejTpWM5qPdp9krG4T3QUItDvG1sxTGpkk1DMc6i3ANgaxEV8OWatzc+L0MkC9lqm5BqM6dsvsbIlZSJXFyPMT1PbSAW08tLmb48hpTvY3tyuRY3YY8/w=
+
+- os: linux
+    name: "Build Linux CLANGPDB/GCC5"
+    dist: xenial
+    addons:
+      apt:
+        packages:
+        - nasm
+        - uuid-dev
+        - libssl-dev
+        - iasl
+
+    script:
+    - export PYTHON_COMMAND=python3 # Something is broken in Travis CI environment, it asks for python3.7.
+    - file="clang+llvm-9.0.1-x86_64-linux-gnu-ubuntu-16.04"
+    - suf=".tar.xz"
+    - curl -LO "https://github.com/llvm/llvm-project/releases/download/llvmorg-9.0.1/${file}${suf}" || exit 1
+    - sum=$(shasum -a 256 "${file}${suf}" | cut -f1 -d' ')
+    - expsum="1af280e96fec62acf5f3bb525e36baafe09f95f940dc9806e22809a83dfff4f8"
+    - if [ "$sum" != "$expsum" ]; then echo "Invalid checksum $sum" ; exit 1 ; fi
+    - tar -xf "${file}${suf}" || exit 1
+    - export PATH="$(pwd)/${file}/bin:$PATH"
+    - "./build_duet.tool"
+    - "./build_oc.tool"
+
+  - os: linux
+    name: "Build Linux CLANG38"
+    dist: xenial
+    addons:
+      apt:
+        packages:
+        - nasm
+        - uuid-dev
+        - iasl
+        - clang-8
+        - llvm-8-dev
+
+    script:
+    - export PYTHON_COMMAND=python3 # Something is broken in Travis CI environment, it asks for python3.7.
+    - sudo apt-get remove -y llvm-3.8 libllvm3.8 # Move LLVM 3.8 out of the way.
+    - export PATH="/usr/lib/llvm-8/bin:$PATH" # Default compiler (7.0 or 3.8) has no LTO plugin.
+    - export TOOLCHAINS=CLANG38
+    - "./build_duet.tool"
+    - "./build_oc.tool"
+    # Currently this is too ugly, but maybe we can use that in the future.
+    - sudo apt-get install -y doxygen texlive texlive-latex-extra
+    - abort() { tail -200 log.txt ; exit 1 ; }
+    - doxygen Doxyfile &> log.txt || abort
+    - cd Doxy/latex || abort
+    - make pdf &> log.txt || abort
