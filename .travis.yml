@@ -21,14 +21,16 @@ matrix:
 
     deploy:
       provider: releases
+      user: "GITHUBUSERNAME"
+      password: "GITHUBPASSWORD"
       skip_cleanup: true
       file:
       - Binaries/*.zip
       file_glob: true
       on:
         tags: true
-      api_key:
-        secure: CRCTmf0iRZTtZW3+G/S0fcvwiXgJJQbnmit7Q5FsUIGKaTGvwzRJa6jszt31gpeJB0RttaRwxMztX9zgYZweeqVmfUN3S0ZDCxj5wwCCzsGX+ZLvbYUHVwad3i+L27Cc9TsHPwUb1cUoMZFWljukDJSezjf39ViS6bzo/dM0o9B9NMoGY+3ytSpdt/3AUByMZ70mBueKbUVZzpduG4ggkNT1zeHMTkS98moj3YdpSTdhOpJy7pd/NKIHw05kMWDPvovDPPaTT1NSaPuRkKstP8lZL2KI1o4Lz93atmv/HsgELvV8WYGexSOxNQIs8fAYPiIOMIYdDJNJOQNJS0GRTpxtPWj/UZhXPbuHEFq9H8EycXueKaDq4bGtLDhXNz0qQ9iVif3ZOcd9oGlKQ3C6VaTwlnSuAR235Ilw+y9u01XTok0aHTcaEPJi+aa1FlrehJPNIpI42MkwqPrOJQSHaE+R2/+481jEN9AiWlk+2G11cKQ1yewOBSv8T/PJ5KwjIUZ0VWfh7v4G6fwAy7ilagtbUGrxaaUkMJdkQzo+IQlH9jt6EMrDjjcejTpWM5qPdp9krG4T3QUItDvG1sxTGpkk1DMc6i3ANgaxEV8OWatzc+L0MkC9lqm5BqM6dsvsbIlZSJXFyPMT1PbSAW08tLmb48hpTvY3tyuRY3YY8/w=
+     
+
 
   - os: linux
     name: "Build Linux CLANGPDB/GCC5"
