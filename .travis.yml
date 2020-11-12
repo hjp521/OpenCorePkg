@@ -20,8 +20,8 @@ matrix:
     
     deploy:
       provider: releases
-      user: "GITHUBUSERNAME"
-      password: "GITHUBPASSWORD"
+      user: "$GITHUBUSERNAME"
+      password: "$GITHUBPASSWORD"
       skip_cleanup: true
       file:"Binaries/*.zip"
       file_glob: true
