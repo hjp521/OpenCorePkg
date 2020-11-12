@@ -5,22 +5,24 @@ env:
   - HAS_OPENSSL_BUILD=1
   - HAS_OPENSSL_W32BUILD=0
   - WERROR=1
-  matrix:
+matrix:
   include:
+
   - os: osx
-    name: Build macOS XCODE5
+    name: "Build macOS XCODE5"
     osx_image: xcode10.2
     compiler: clang
+
     script:
-    - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl
-      mingw-w64
+    - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl mingw-w64
     - "./build_duet.tool"
     - "./build_oc.tool"
+    
     deploy:
-        provider: releases
-        user: "GITHUBUSERNAME"
-        password: "GITHUBPASSWORD"
-        skip_cleanup: true
+      provider: releases
+      user: "GITHUBUSERNAME"
+      password: "GITHUBPASSWORD"
+      skip_cleanup: true
       file:"Binaries/*.zip"
       file_glob: true
       on:
