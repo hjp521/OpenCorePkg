@@ -2,10 +2,8 @@ language: cpp
 env:
   global:
   - FORCE_INSTALL=1
-  - HAS_OPENSSL_BUILD=1
-  - HAS_OPENSSL_W32BUILD=0
   - WERROR=1
-  - secure: qJPMtWA4feUFzbR/eDWiDpqFMZNazl1PhQ1HaXCVZxQuI7aSXu+lDL0FsVVMsckfyRCXdJcpeu+1w2MxfHrknkhqp8C73FOd4Z3SfA24F2oJxLZI8QMRiX/swelgvoj1l0XOQnebdHqasbusy6cazVMP3v3E9XkEvojE35c+bhbdo+fFazt9RZX+nZSLZFC61+6rmgkmPzb+T196g+9/jxR1ulXtMZtluzt+ZJVnPpO2+ZQ1jSMZgJ7SCy3oBzpDOnhnkHVFRV+KKi3zTDTMyLTgQhmW0zICAxB01GdiGM/qrsbx3dZpKfsoyhR5WhHAks/8bPq1sH8e7cJZDfSYCclJy1ezVDkMJ+SCiynHAe9HTCTPgWo5u7CQo42UAlLCuLukChNn1vAewSJTxTGZQeym704suHj/ZLxHQfPDLdicS/oHzIVaXIygSBZCeMZhOoLQBJJmT7zAP77f0Ojf/IppwbWUxryBkwJ0xViPY9ijxpYA4xd7hG5MQAawyvT3rVYd4y0WLyyg1VcHrz188kHy9igUNNHIoeCb+xVpMFW/kJ6UyrzJH642xyzSNZ93tcIkNZWdOHxwSuDBitcN1ZKdv2MVqb6EqbKGzRW9g7QSXE94nAdO2gWe18qfzWOCzxM1CpbaPKbdgbnWAla1IH3uVTQqIuKzlIhMe/LFXvI=
+ 
 
 matrix:
   include:
@@ -107,28 +105,3 @@ matrix:
     - plutil -lint Docs/Sample.plist || exit 1
     - plutil -lint Docs/SampleCustom.plist || exit 1
 
-  - os: osx
-    name: "Analyze Coverity"
-    osx_image: xcode11.6
-    compiler: clang
-
-    before_install:
-      - HOMEBREW_NO_INSTALL_CLEANUP=1 HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl
-      - curl -Ls https://entrust.com/root-certificates/entrust_l1k.cer -o ~/entrust_l1k.crt || exit 1
-      - curl -LS https://curl.haxx.se/ca/cacert.pem -o ~/cacert.pem || exit 1
-      - cat ~/entrust_l1k.crt >> ~/cacert.pem || exit 1
-      - echo "cacert=\"$HOME/cacert.pem\"" > ~/.curlrc || exit 1
-      - echo "ca_certificate=$HOME/cacert.pem" > ~/.wgetrc || exit 1
-
-    script:
-      - echo "This script runs coverity..."
-
-    addons:
-      coverity_scan:
-        project:
-          name: "acidanthera/OpenCorePkg"
-          description: "OpenCorePkg"
-        notification_email: $NOTIFICATION_EMAIL
-        build_command_prepend: "./build_oc.tool --skip-build --skip-package && cd UDK ; src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/Lilu/master/Lilu/Scripts/covstrap.sh) && eval \"$src\" || exit 1"
-        build_command: "../build_oc.tool --skip-tests --skip-package RELEASE"
-        branch_pattern: master
